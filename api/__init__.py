@@ -5,10 +5,13 @@ from telethon import TelegramClient, types
 from telethon.tl.functions.channels import GetChannelsRequest, \
 	GetFullChannelRequest, GetParticipantsRequest
 from telethon.tl.functions.messages import GetHistoryRequest, \
-	GetDiscussionMessageRequest, GetWebPageRequest
+	GetDiscussionMessageRequest, GetWebPageRequest, SearchRequest
 from telethon.tl.functions.users import GetFullUserRequest
 from telethon.tl.functions.photos import GetUserPhotosRequest
 from telethon.tl.functions.stats import GetBroadcastStatsRequest
+from telethon.sync import TelegramClient
+from telethon import functions, types
+from datetime import datetime
 
 
 '''
@@ -119,16 +122,19 @@ async def get_posts(client, source, min_id=0, offset_id=0):
 	'''
 
 	return await client(
-		GetHistoryRequest(
+			SearchRequest(
 			peer=source,
 			hash=0,
+			q='Ivermectin',
 			limit=100,
 			max_id=0,
 			min_id=min_id,
 			offset_id=offset_id,
 			add_offset=0,
-			offset_date=0,
-		)
+			min_date=datetime(2018, 6, 25),
+			max_date=datetime(2022, 6, 25),
+			filter=types.InputMessagesFilterEmpty()
+			)
 	)
 
 # get full chat request

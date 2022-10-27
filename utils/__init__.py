@@ -290,8 +290,12 @@ def get_forward_attrs(msg, res, channels_data):
 	# get from id value
 	from_id = msg['from_id']
 	if from_id:
-		channel_id = from_id['channel_id']
-		channel_name = get_channel_name(channel_id, channels_data)
+		try:
+			channel_id = from_id['channel_id']
+			channel_name = get_channel_name(channel_id, channels_data)
+		except:
+			channel_id = None
+			channel_name = None
 	else:
 		channel_id = None
 		channel_name = None

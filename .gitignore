@@ -12,3 +12,9 @@ session_file.session-journal
 
 # files
 test.py
+
+# venv
+fakenews/
+
+# config/credentials
+config/

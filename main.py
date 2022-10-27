@@ -13,7 +13,7 @@ import os
 from api import *
 from utils import (
 	get_config_attrs, JSONEncoder, create_dirs, cmd_request_type,
-	write_collected_chats
+	write_collected_chats, get_forward_attrs
 )
 
 '''
@@ -137,10 +137,24 @@ else:
 # Create dirs
 create_dirs(output_folder)
 
+handled_channels_counter = 0
+max_channels = 1000
+starttime = time.time()
 # iterate channels
 for channel in req_input:
 
+
+
+	if(handled_channels_counter >= max_channels):
+		break
+
+	# sleep program for a few seconds
+	if len(req_input) > 1:
+		# time.sleep(1)
+		time.sleep(15)
+
 	'''
+
 
 	Process arguments
 	-> channels' data
@@ -156,12 +170,15 @@ for channel in req_input:
 	print (f'> Collecting data from Telegram Channel -> {channel}')
 	print ('> ...')
 	print ('')
-
-	# Channel's attributes
-	entity_attrs = loop.run_until_complete(
-		get_entity_attrs(client, channel)
-	)
-
+	try:
+		# Channel's attributes
+		entity_attrs = loop.run_until_complete(
+			get_entity_attrs(client, channel)
+		)
+	except Exception as e:
+		print(e)
+		print('Channel could not be scraped, going to next')
+		continue
 
 	# Get Channel ID | convert output to dict
 	channel_id = entity_attrs.id
@@ -225,7 +242,8 @@ for channel in req_input:
 		data = posts.to_dict()
 
 		# Get offset ID | Get messages
-		offset_id = min([i['id'] for i in data['messages']])
+		# offset_id = min([i['id'] for i in data['messages']])
+		offset_id = 0
 
 		while len(posts.messages) > 0:
 			
@@ -251,7 +269,6 @@ for channel in req_input:
 			if posts.messages:
 				tmp = posts.to_dict()
 				data['messages'].extend(tmp['messages'])
-
 				# Adding unique chats objects
 				all_chats = [i['id'] for i in data['chats']]
 				chats = [
@@ -281,6 +298,30 @@ for channel in req_input:
 				data['chats'].extend(chats)
 				data['users'].extend(users)
 
+				for message in tmp['messages']:
+					# Forward attrs
+					response = {
+						'channel_id': message['peer_id']['channel_id']
+					}
+					forward_attrs = message['fwd_from']
+					response['is_forward'] = 1 if forward_attrs != None else 0
+					response['forward_msg_date'] = None
+					response['forward_msg_date_string'] = None
+					response['forward_msg_link'] = None
+					response['from_channel_id'] = None
+					response['from_channel_name'] = None
+					# print(data['chats'])
+					if forward_attrs:
+						response = get_forward_attrs(
+							forward_attrs,
+							response,
+							pd.DataFrame(data['chats'])
+					)
+					forwarder = response['from_channel_name']
+					print(forwarder)
+					if forwarder != None and not req_input.__contains__(forwarder):
+						req_input.append(forwarder)
+
 				# Get offset ID
 				offset_id = min([i['id'] for i in tmp['messages']])
 
@@ -304,9 +345,10 @@ for channel in req_input:
 		print ('> done.')
 		print ('')
 
-	# sleep program for a few seconds
-	if len(req_input) > 1:
-		time.sleep(60)
+	
+	
+	handled_channels_counter += 1
+	print("Handled Channels: " + str(handled_channels_counter) + " of " + str(max_channels) + " in " + str(time.time() - starttime) + "s")
 
 
 '''
