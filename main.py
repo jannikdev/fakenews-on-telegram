@@ -413,9 +413,9 @@ for channel in req_input:
 	
 		# sleep program for a few seconds
 		if len(req_input) > 1:
-			print('sleeping for 10 secs')
+			print('sleeping for 20 secs')
 			# time.sleep(1)
-			time.sleep(10)
+			time.sleep(20)
 
 	
 	
