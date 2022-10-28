@@ -8,6 +8,7 @@ import json
 import time
 import sys
 import os
+import atexit
 
 # import Telegram API submodules
 from api import *
@@ -21,6 +22,67 @@ from utils import (
 Arguments
 
 '''
+chats_file = None
+
+def postprocessing():
+	global chats_file
+	# close chat file
+	chats_file.close()
+
+	# get collected chats
+	collected_chats = list(set([
+		i.rstrip() for i in open(chats_path, mode='r', encoding='utf-8')
+	]))
+
+	# re write collected chats
+	chats_file = open(chats_path, mode='w', encoding='utf-8')
+	for c in collected_chats:
+		chats_file.write(f'{c}\n')
+
+	# close file
+	chats_file.close()
+
+
+	# Process counter
+	counter_df = pd.DataFrame.from_dict(
+		counter,
+		orient='index'
+	).reset_index().rename(
+		columns={
+			'index': 'id'
+		}
+	)
+
+	# save counter
+	counter_df.to_csv(
+		f'{output_folder}/counter.csv',
+		encoding='utf-8',
+		index=False
+	)
+
+	# merge dataframe
+	df = pd.read_csv(
+		f'{output_folder}/collected_chats.csv',
+		encoding='utf-8'
+	)
+
+	del counter_df['username']
+	df = df.merge(counter_df, how='left', on='id')
+	df.to_csv(
+		f'{output_folder}/collected_chats.csv',
+		index=False,
+		encoding='utf-8'
+	)
+
+
+	# log results
+	text = f'''
+	End program at {time.ctime()}
+
+	'''
+	print (text)
+
+atexit.register(postprocessing)
 
 parser = argparse.ArgumentParser(description='Arguments.')
 parser.add_argument(
@@ -138,20 +200,15 @@ else:
 create_dirs(output_folder)
 
 handled_channels_counter = 0
-max_channels = 1000
+max_channels = 20000
 starttime = time.time()
 # iterate channels
 for channel in req_input:
-
-
+	# print(req_input)
+	# print(req_input.__contains__('radio_bielefeld_online'))
 
 	if(handled_channels_counter >= max_channels):
 		break
-
-	# sleep program for a few seconds
-	if len(req_input) > 1:
-		# time.sleep(1)
-		time.sleep(15)
 
 	'''
 
@@ -177,7 +234,8 @@ for channel in req_input:
 		)
 	except Exception as e:
 		print(e)
-		print('Channel could not be scraped, going to next')
+		print('Channel could not be scraped, going to next after 5secs')
+		time.sleep(5)
 		continue
 
 	# Get Channel ID | convert output to dict
@@ -268,7 +326,13 @@ for channel in req_input:
 			# Update data dict
 			if posts.messages:
 				tmp = posts.to_dict()
-				data['messages'].extend(tmp['messages'])
+				# Adding unique messages
+				all_messages = [i['id'] for i in data['messages']]
+				messages = [
+					i for i in tmp['messages']
+					if i['id'] not in all_messages
+				]
+				data['messages'].extend(messages)
 				# Adding unique chats objects
 				all_chats = [i['id'] for i in data['chats']]
 				chats = [
@@ -318,9 +382,11 @@ for channel in req_input:
 							pd.DataFrame(data['chats'])
 					)
 					forwarder = response['from_channel_name']
-					print(forwarder)
 					if forwarder != None and not req_input.__contains__(forwarder):
+						print("Adding new channels:")
+						print(forwarder)
 						req_input.append(forwarder)
+						
 
 				# Get offset ID
 				offset_id = min([i['id'] for i in tmp['messages']])
@@ -344,6 +410,12 @@ for channel in req_input:
 		writer.close()
 		print ('> done.')
 		print ('')
+	
+		# sleep program for a few seconds
+		if len(req_input) > 1:
+			print('sleeping for 10 secs')
+			# time.sleep(1)
+			time.sleep(10)
 
 	
 	
@@ -357,58 +429,47 @@ Clean generated chats text file
 
 '''
 
-# close chat file
-chats_file.close()
-
-# get collected chats
-collected_chats = list(set([
-	i.rstrip() for i in open(chats_path, mode='r', encoding='utf-8')
-]))
-
-# re write collected chats
-chats_file = open(chats_path, mode='w', encoding='utf-8')
-for c in collected_chats:
-	chats_file.write(f'{c}\n')
-
-# close file
-chats_file.close()
-
-
-# Process counter
-counter_df = pd.DataFrame.from_dict(
-	counter,
-	orient='index'
-).reset_index().rename(
-	columns={
-		'index': 'id'
-	}
-)
-
-# save counter
-counter_df.to_csv(
-	f'{output_folder}/counter.csv',
-	encoding='utf-8',
-	index=False
-)
-
-# merge dataframe
-df = pd.read_csv(
-	f'{output_folder}/collected_chats.csv',
-	encoding='utf-8'
-)
-
-del counter_df['username']
-df = df.merge(counter_df, how='left', on='id')
-df.to_csv(
-	f'{output_folder}/collected_chats.csv',
-	index=False,
-	encoding='utf-8'
-)
-
-
-# log results
-text = f'''
-End program at {time.ctime()}
-
-'''
-print (text)
+# # close chat file
+# chats_file.close()
+# # get collected chats
+# collected_chats = list(set([
+# 	i.rstrip() for i in open(chats_path, mode='r', encoding='utf-8')
+# ]))
+# # re write collected chats
+# chats_file = open(chats_path, mode='w', encoding='utf-8')
+# for c in collected_chats:
+# 	chats_file.write(f'{c}\n')
+# # close file
+# chats_file.close()
+# # Process counter
+# counter_df = pd.DataFrame.from_dict(
+# 	counter,
+# 	orient='index'
+# ).reset_index().rename(
+# 	columns={
+# 		'index': 'id'
+# 	}
+# )
+# # save counter
+# counter_df.to_csv(
+# 	f'{output_folder}/counter.csv',
+# 	encoding='utf-8',
+# 	index=False
+# )
+# # merge dataframe
+# df = pd.read_csv(
+# 	f'{output_folder}/collected_chats.csv',
+# 	encoding='utf-8'
+# )
+# del counter_df['username']
+# df = df.merge(counter_df, how='left', on='id')
+# df.to_csv(
+# 	f'{output_folder}/collected_chats.csv',
+# 	index=False,
+# 	encoding='utf-8'
+# )
+# # log results
+# text = f'''
+# End program at {time.ctime()}
+# '''
+# print (text)

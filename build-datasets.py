@@ -249,7 +249,8 @@ for f in json_files:
 				encoding='utf-8',
 				header=not os.path.isfile(msgs_file_path),
 				index=False,
-				mode='a'
+				mode='a',
+				sep='\t'
 			)
 
 		except KeyError:
