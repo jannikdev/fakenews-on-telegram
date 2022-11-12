@@ -45,7 +45,7 @@ def postprocessing():
 		except:
 			print("last channel could not be saved")
 	try:
-		with open('output/run_info/channels_to_scrape.txt', 'w') as fp:
+		with open('output/run_info/channels_to_scrape.txt', 'w', encoding='utf-8') as fp:
 			fp.write('\n'.join(list(map(str,req_input))))
 	except:
 		print("channels_to_scrape could not be updated")
@@ -216,9 +216,10 @@ if req_type == 'batch':
 else:
 	req_input = [req_input]
 
-if exists('last_successful_channel.txt'):
+if exists('output/run_info/last_successful_channel.txt'):
 	last_channel_file = open('output/run_info/last_successful_channel.txt')
 	last_channel = last_channel_file.read()
+	print("last channel: " + last_channel)
 	resume_channel = req_input[req_input.index(last_channel)+1]
 	print("resuming after: " + str(last_channel) + " at " + str(resume_channel))
 	# would falsify time capture
