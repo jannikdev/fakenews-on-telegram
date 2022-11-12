@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Import modules
+from time import sleep
 import pandas as pd
 import asyncio
 import json
@@ -80,6 +81,7 @@ def process_participants_count(client, channel_id):
 	Returns:
 		Participants count
 	'''
+	# print("participants count")
 	channel_request = loop.run_until_complete(
 		full_channel_req(client, channel_id)
 	)
@@ -109,6 +111,7 @@ def write_collected_chats(
 
 	'''
 	metadata = []
+	request_counter = 0
 	for c in chats_object:
 		try:
 			id_ = c['id']
@@ -139,10 +142,16 @@ def write_collected_chats(
 
 					# Telegram API -> full channel request
 					try:
+						# print("collect chat data")
+						# request_counter+=1
+						# if request_counter >= 10:
+						# 	print("more than 10 requests at once, sleeping for 1 seconds")
+						# 	sleep(1)
 						channel_request = loop.run_until_complete(
 							full_channel_req(client, id_)
 						)
-
+						if(channel_request is None):
+							continue
 						channel_request = channel_request.to_dict()
 						collected_chats = channel_request['chats']
 					
@@ -153,6 +162,7 @@ def write_collected_chats(
 							else:
 								ch_id = ch['id']
 								try:
+									# request_counter+=1
 									ch['participants_count'] = \
 										process_participants_count(client, ch_id)
 								except TypeError:
@@ -196,7 +206,6 @@ def write_collected_chats(
 
 		except KeyError:
 			pass
-
 	df = pd.DataFrame(metadata)
 	csv_path = f'{output_folder}/collected_chats.csv'
 	df.to_csv(
