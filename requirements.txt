@@ -5,3 +5,4 @@ tqdm==4.50.2
 networkx==2.5
 matplotlib==3.3.2
 python-louvain==0.16
+spacy
