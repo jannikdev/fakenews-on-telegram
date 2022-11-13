@@ -297,7 +297,11 @@ for channel in (req_input if resume_channel == None else req_input[req_input.ind
 	)
 
 	# save full channel request
-	full_channel_data = channel_request.to_dict()
+	if(channel_request != None):
+		full_channel_data = channel_request.to_dict()
+	else:
+		print("channel_request was None, skipping to next")
+		continue
 
 	# JsonEncoder
 	full_channel_data = JSONEncoder().encode(full_channel_data)
