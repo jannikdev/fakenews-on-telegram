@@ -49,9 +49,6 @@ def postprocessing():
 			fp.write('\n'.join(list(map(str,req_input))))
 	except:
 		print("channels_to_scrape could not be updated")
-	# channels_to_scrape_file = open('channels_to_scrape.txt')
-	# channels_to_scrape_file.write(req_input)
-	# channels_to_scrape_file.close()
 
 	# close chat file
 	try:
@@ -391,25 +388,25 @@ for channel in (req_input if resume_channel == None else req_input[req_input.ind
 					i for i in tmp['messages']
 					if i['id'] not in all_messages
 				]
-				# ## filter german messages
-				# print(str(len(messages)) + ' messages')
-				# i = 0
-				# for doc in tqdm(nlp_model.pipe(messages), total=len(messages)):
-				# 	messages['language'][i] = doc._.language['language']
-				# 	i+=1
-				# german_messages = filter(lambda message: message['language'] == 'de', messages)
-				# print(str(len(german_messages)) + ' german')
-				# data['messages'].extend(german_messages) 
-				# german_ids=[]
-				# for message in german_messages:
-				# 	german_ids.append(message['channel_id'])
+				## filter german messages
+				print(str(len(messages)) + ' messages')
+				i = 0
+				for doc in tqdm(nlp_model.pipe(messages), total=len(messages)):
+					messages['language'][i] = doc._.language['language']
+					i+=1
+				german_messages = filter(lambda message: message['language'] == 'de', messages)
+				print(str(len(german_messages)) + ' german')
+				data['messages'].extend(german_messages) 
+				german_ids=[]
+				for message in german_messages:
+					german_ids.append(message['channel_id'])
 				# Adding unique chats objects
 				all_chats = [i['id'] for i in data['chats']]
 				chats = [
 					i for i in tmp['chats']
 					if i['id'] not in all_chats
 				]
-				# german_chats = filter(lambda chat: chat['id'] in german_ids)
+				german_chats = filter(lambda chat: chat['id'] in german_ids)
 
 				# channel chats in posts
 				counter = write_collected_chats(

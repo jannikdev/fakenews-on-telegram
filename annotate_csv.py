@@ -2,10 +2,16 @@ import pandas as pd
 import spacy
 from tqdm import tqdm
 from spacy.language import Language
+import csv
 
 from spacy_language_detection import LanguageDetector
 
-df = pd.read_csv('./output/data/msgs_dataset.csv', encoding='utf-8', delimiter='\t', error_bad_lines=False)
+lines=list(csv.reader(open('./output/data/msgs_dataset.csv', encoding='utf-8'),delimiter='\t'))    
+header, values = lines[0], lines[1:]    
+data = {h:v for h,v in zip (header, zip(*values))}
+
+df = pd.DataFrame.from_dict(data)
+print(df)
 print(df['message'])
 
 def get_lang_detector(nlp, name):
@@ -22,16 +28,12 @@ i = 0
 for doc in tqdm(nlp_model.pipe(df['message']), total=len(df)):
     df['language'][i] = doc._.language['language']
     i+=1
-    # print(doc._.language)
-# for index, row in df.iterrows():
-#     language = nlp_model(str(row['message']))._.language['language']
-#     df['language'][index] = language
+
 print(df)
 print(df['language'].value_counts())
 df.to_csv(
 				'./output/data/msgs_dataset_annotated.csv',
 				encoding='utf-8',
 				index=False,
-				# mode='a',
 				sep='\t'
 			)
